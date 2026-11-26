@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Health Log</title>
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Health Log">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="viewTitle">Health Log</h1>
+    <div class="topbar-actions">
+      <button id="refreshBtn" class="icon-btn" aria-label="Refresh" hidden>&#x21bb;</button>
+      <button id="signOutBtn" class="text-btn" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="signin" class="center-card" hidden>
+      <h2>Health Log</h2>
+      <p>Sign in with the Google account that owns your Health_Log sheet.</p>
+      <button id="signInBtn" class="primary">Sign in with Google</button>
+      <p class="hint" id="configHint" hidden>Fill in <code>config.js</code> first (build plan step 4).</p>
+    </section>
+    <div id="view"></div>
+  </main>
+
+  <nav class="bottomnav" id="bottomnav" hidden>
+    <button data-view="dashboard" class="active"><span class="ico">&#9673;</span>Dashboard</button>
+    <button data-view="nutrition"><span class="ico">&#127860;</span>Nutrition</button>
+    <button data-view="workouts"><span class="ico">&#127947;</span>Workouts</button>
+    <button data-view="history"><span class="ico">&#8635;</span>History</button>
+  </nav>
+
+  <dialog id="modal">
+    <form method="dialog" id="modalForm">
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody"></div>
+      <div class="modal-actions">
+        <button type="button" id="modalDelete" class="danger" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button type="button" id="modalCancel">Cancel</button>
+        <button type="submit" id="modalSave" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="sheets.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
