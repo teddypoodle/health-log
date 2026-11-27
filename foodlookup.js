@@ -235,7 +235,7 @@ const FoodLookup = (() => {
     const sv = el('f_servings'); if (sv) sv.value = isPortion ? qty : 1;
     const notes = el('f_notes');
     if (notes && (!notes.value || notes.dataset.auto === notes.value)) {
-      const amount = isPortion ? `${fmt(qty, 2)} × ${u.label}` : `${fmt(qty, 1)} ${u.label === 'grams' ? 'g' : 'oz'}`;
+      const amount = isPortion ? (qty === 1 ? u.label : `${fmt(qty, 2)} × ${u.label}`) : `${fmt(qty, 1)} ${u.label === 'grams' ? 'g' : 'oz'}`;
       notes.value = notes.dataset.auto = `${amount} · ${picked.source}`;
     }
   }
