@@ -462,8 +462,10 @@ function viewLogger() {
         <td><input inputmode="decimal" data-ex="${i}" data-set="${j}" data-f="rpe" value="${esc(s.rpe)}"></td>
         <td><button class="x" data-action="rm-set" data-ex="${i}" data-set="${j}" aria-label="Remove set">&times;</button></td></tr>`).join('')}
       </tbody></table>
-      <button class="text-btn" data-action="add-set" data-ex="${i}">+ Add set</button>
-    </div>`).join('')}
+      <div class="row"><button class="text-btn" data-action="add-set" data-ex="${i}">+ Add set</button>
+        <button class="text-btn" style="color:var(--muted)" data-action="rm-exercise" data-ex="${i}">Remove exercise</button></div>
+    </div>`).join('') || '<div class="card"><p class="muted" style="margin:0">No exercises yet. Tap "Add exercise" to start.</p></div>'}
+  <button class="secondary full" data-action="add-exercise" style="margin-bottom:12px">+ Add exercise</button>
   <button class="primary full" data-action="save-session">Save workout</button>
   <button class="text-btn full" style="margin-top:8px" data-action="discard-session">Discard</button>`;
 }
@@ -493,13 +495,112 @@ async function saveSession() {
   if (ok) { S.logger = null; saveDraft(); S.view = 'workouts'; render(); }
 }
 
+const BLANK_TEMPLATE = 'None: I\'ll add my own exercises';
 function adhocWorkout() {
   const ids = [...new Set((S.data.Workout_Templates || []).map(t => String(t.template_id)))];
-  if (!ids.length) { toast('Add a template in the Workout_Templates tab first'); return; }
   openForm({
-    title: 'Choose a template', saveLabel: 'Start',
-    fields: [{ key: 'template_id', label: 'Template', type: 'select', options: ids, value: ids[0] }],
-    onSave: async v => { setTimeout(() => startLogger(v.template_id, v.template_id, '', todayStr()), 0); }
+    title: 'Unscheduled workout', saveLabel: 'Start',
+    fields: [
+      { key: 'title', label: 'Workout name', placeholder: 'e.g. Upper body', value: '' },
+      { key: 'template_id', label: 'Start from a template', type: 'select', options: [BLANK_TEMPLATE, ...ids], value: BLANK_TEMPLATE }
+    ],
+    onSave: async v => {
+      setTimeout(() => {
+        if (v.template_id === BLANK_TEMPLATE) startBlankLogger(v.title || 'Workout', todayStr());
+        else startLogger(v.template_id, v.title || v.template_id, '', todayStr());
+      }, 0);
+    }
+  });
+}
+function startBlankLogger(title, date) {
+  S.logger = { schedule_id: '', template_id: '', title, date: date || todayStr(), exercises: [] };
+  saveDraft();
+  S.view = 'logger'; render(); window.scrollTo(0, 0);
+}
+
+// ----- Adding your own exercises -----
+function exerciseNamesHtml() {
+  const names = new Map();
+  (S.data.Exercise_Library || []).forEach(e => { if (e.name) names.set(String(e.name).trim().toLowerCase(), String(e.name).trim()); });
+  liveSets().forEach(r => {
+    const n = String(r.exercise_name || '').trim();
+    if (n && !names.has(n.toLowerCase())) names.set(n.toLowerCase(), n);
+  });
+  return `<datalist id="exerciseNames">${[...names.values()].sort().map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
+}
+/** Matches a typed name to your Exercise_Library (or past logs) so history and last-used weight line up. */
+function resolveExercise(name) {
+  const clean = String(name).trim(), lc = clean.toLowerCase();
+  const lib = (S.data.Exercise_Library || []).find(e => String(e.name).trim().toLowerCase() === lc);
+  if (lib) return { exercise_id: lib.exercise_id, name: String(lib.name).trim(), cue: lib.form_cue || '', video: lib.video_url || '' };
+  const prev = liveSets().find(r => String(r.exercise_name).trim().toLowerCase() === lc);
+  if (prev) return { exercise_id: prev.exercise_id, name: String(prev.exercise_name).trim(), cue: '', video: '' };
+  return { exercise_id: 'custom-' + (lc.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'exercise'), name: clean, cue: '', video: '' };
+}
+function setCount(v) { return Math.min(20, Math.max(1, Math.round(num(v)) || 3)); }
+function wireLastWeight() {
+  const nameEl = $('#f_name'), wEl = $('#f_weight');
+  if (!nameEl || !wEl) return;
+  nameEl.addEventListener('change', () => {
+    if (!nameEl.value.trim() || wEl.value) return;
+    const w = lastWeight(resolveExercise(nameEl.value).exercise_id);
+    if (!blank(w)) wEl.value = w;
+  });
+  nameEl.focus();
+}
+function addExerciseToLogger() {
+  openForm({
+    title: 'Add exercise', saveLabel: 'Add',
+    extraHtml: exerciseNamesHtml() + '<p class="hint">Pick from your list or type any new exercise.</p>',
+    fields: [
+      { key: 'name', label: 'Exercise', list: 'exerciseNames', required: true, placeholder: 'e.g. Bench press' },
+      [{ key: 'sets', label: 'Sets', type: 'number', value: 3 },
+       { key: 'reps', label: 'Target reps', type: 'number', placeholder: 'e.g. 10' }],
+      { key: 'weight', label: `Weight (${wtUnit()})`, type: 'number', placeholder: 'optional' }
+    ],
+    afterOpen: wireLastWeight,
+    onSave: async v => {
+      if (!v.name) throw new Error('Enter an exercise name');
+      const ex = resolveExercise(v.name);
+      const w = blank(v.weight) ? lastWeight(ex.exercise_id) : v.weight;
+      const n = setCount(v.sets);
+      S.logger.exercises.push({ ...ex,
+        target: `${n} × ${v.reps || '?'}${blank(v.weight) ? '' : ' @ ' + v.weight + ' ' + wtUnit()}`,
+        notes: '', repsHint: String(v.reps || ''),
+        sets: Array.from({ length: n }, () => ({ reps: '', weight: w, rpe: '' })) });
+      saveDraft();
+      setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
+    }
+  });
+}
+/** Adds an exercise to a workout you already saved (from "Recently logged"). */
+function addExerciseToSession(id) {
+  const sets = liveSets().filter(r => r.session_id === id);
+  if (!sets.length) return;
+  const first = sets[0];
+  openForm({
+    title: 'Add exercise to ' + first.workout_name, saveLabel: 'Add',
+    extraHtml: exerciseNamesHtml() + `<p class="hint">${prettyDate(first.date)}. Adds this many sets, all with the same reps and weight. You can change single sets afterwards with Edit.</p>`,
+    fields: [
+      { key: 'name', label: 'Exercise', list: 'exerciseNames', required: true, placeholder: 'e.g. Bench press' },
+      [{ key: 'sets', label: 'Sets', type: 'number', value: 3 },
+       { key: 'reps', label: 'Reps', type: 'number', required: true }],
+      [{ key: 'weight', label: `Weight (${wtUnit()})`, type: 'number' },
+       { key: 'rpe', label: 'RPE', type: 'number', placeholder: 'optional' }]
+    ],
+    afterOpen: wireLastWeight,
+    onSave: v => {
+      if (!v.name) throw new Error('Enter an exercise name');
+      if (blank(v.reps)) throw new Error('Enter reps');
+      const ex = resolveExercise(v.name);
+      const stamp = nowStamp();
+      const startNo = sets.filter(s => String(s.exercise_id) === String(ex.exercise_id)).length;
+      const rows = Array.from({ length: setCount(v.sets) }, (_, k) => ({
+        entry_id: uid('s'), session_id: id, date: first.date, schedule_id: first.schedule_id,
+        workout_name: first.workout_name, exercise_id: ex.exercise_id, exercise_name: ex.name, set_no: startNo + k + 1,
+        reps: v.reps, weight: v.weight, rpe: v.rpe, notes: '', deleted: false, updated_at: stamp }));
+      return Sheets.append('Workouts', rows);
+    }
   });
 }
 
@@ -516,6 +617,7 @@ function editSession(id) {
   });
   openForm({
     title: sets[0].workout_name + ' · ' + prettyDate(sets[0].date), fields,
+    extraHtml: `<button type="button" class="secondary full" data-action="session-add-ex" data-id="${esc(id)}" style="margin-bottom:8px">+ Add an exercise to this workout</button>`,
     onSave: v => {
       const stamp = nowStamp();
       return Sheets.updateRows('Workouts', sets.map(s => ({ ...s, date: v.date,
@@ -601,6 +703,13 @@ document.addEventListener('click', e => {
     x.sets.push({ reps: '', weight: prev.weight, rpe: '' }); saveDraft(); render();
   } else if (a === 'rm-set') {
     S.logger.exercises[Number(el.dataset.ex)].sets.splice(Number(el.dataset.set), 1); saveDraft(); render();
+  } else if (a === 'add-exercise') addExerciseToLogger();
+  else if (a === 'rm-exercise') {
+    const i = Number(el.dataset.ex), x = S.logger.exercises[i];
+    if (x.sets.some(s => !blank(s.reps)) && !confirm('Remove ' + x.name + ' and its sets?')) return;
+    S.logger.exercises.splice(i, 1); saveDraft(); render();
+  } else if (a === 'session-add-ex') {
+    $('#modal').close(); addExerciseToSession(el.dataset.id);
   } else if (a === 'save-session') saveSession();
   else if (a === 'discard-session') {
     if (confirm('Discard this workout?')) { S.logger = null; saveDraft(); S.view = 'workouts'; render(); }
