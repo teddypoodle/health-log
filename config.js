@@ -11,5 +11,9 @@ window.CONFIG = {
   SPREADSHEET_ID: '1oCa6b99wSdQG2zpVwdWJh3Finl8eN3Na5Ax9_4R62Ys',
 
   // Only the Sheets permission is requested. The app can't see the rest of your Drive.
+  // Free key for food lookups (USDA FoodData Central). DEMO_KEY works but is limited to a few
+  // searches an hour. Get your own at https://fdc.nal.usda.gov/api-key-signup and paste it here.
+  USDA_API_KEY: 'DEMO_KEY',
+
   SCOPES: 'https://www.googleapis.com/auth/spreadsheets'
 };
