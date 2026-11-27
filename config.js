@@ -5,7 +5,7 @@
 // ------------------------------------------------------------------
 window.CONFIG = {
   // From Google Cloud Console > APIs & Services > Credentials (ends in .apps.googleusercontent.com)
-  GOOGLE_CLIENT_ID: 'PASTE-YOUR-CLIENT-ID.apps.googleusercontent.com',
+  GOOGLE_CLIENT_ID: '1035479472449-ml75v1p95m670i2s4heb4jlf719ctd7s.apps.googleusercontent.com',
 
   // The long ID in your Health_Log sheet's URL: docs.google.com/spreadsheets/d/<THIS PART>/edit
   SPREADSHEET_ID: 'PASTE-YOUR-SPREADSHEET-ID',
