@@ -102,3 +102,20 @@ dialog::backdrop { background: rgba(0,0,0,.4); }
   background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; }
 #toast.show { opacity: 1; }
 .loading { text-align: center; color: var(--muted); padding: 40px 0; }
+
+/* Food lookup (Add food form) */
+.lookup { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 12px; }
+.lookup-bar { display: flex; gap: 6px; }
+.lookup-bar input { flex: 1; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+.lookup-bar button { white-space: nowrap; }
+.lk-status { margin: 6px 0 0; font-size: 13px; }
+.lk-status:empty { display: none; }
+.lk-err { color: var(--bad); }
+.lk-results { max-height: 40vh; overflow: auto; }
+.lk-results li { padding: 8px 2px; }
+.lk-kcal { font-size: 12px; white-space: nowrap; }
+.lk-reader { margin-top: 8px; border-radius: 8px; overflow: hidden; }
+.lk-reader video { width: 100% !important; border-radius: 8px; }
+.lk-amount { margin-top: 10px; }
+.lk-picked { margin-bottom: 8px; }
+.lk-amount .field { margin-bottom: 4px; }

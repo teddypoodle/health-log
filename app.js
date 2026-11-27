@@ -346,7 +346,7 @@ function wireFoodAutofill() {
 
 function addFood() {
   openForm({
-    title: 'Add food', fields: foodFields(), extraHtml: recentFoodsHtml(), afterOpen: wireFoodAutofill,
+    title: 'Add food', fields: foodFields(), extraHtml: FoodLookup.html() + recentFoodsHtml(), afterOpen: () => { wireFoodAutofill(); FoodLookup.wire(); },
     onSave: v => Sheets.append('Nutrition', [{ ...v, entry_id: uid('n'), deleted: false, updated_at: nowStamp() }])
   });
 }
@@ -354,7 +354,7 @@ function editFood(id) {
   const e = (S.data.Nutrition || []).find(r => r.entry_id === id);
   if (!e) return;
   openForm({
-    title: 'Edit food', fields: foodFields(e), extraHtml: recentFoodsHtml(), afterOpen: wireFoodAutofill,
+    title: 'Edit food', fields: foodFields(e), extraHtml: FoodLookup.html() + recentFoodsHtml(), afterOpen: () => { wireFoodAutofill(); FoodLookup.wire(); },
     onSave: v => Sheets.updateRows('Nutrition', [{ ...e, ...v, updated_at: nowStamp() }]),
     onDelete: () => Sheets.updateRows('Nutrition', [{ ...e, deleted: true, updated_at: nowStamp() }])
   });

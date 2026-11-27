@@ -1,8 +1,8 @@
 // Service worker: lets the app open instantly and install to the Home Screen.
 // App files load network-first (so updates show up right away) with the cached
 // copy as a fallback when offline. Google API calls are never cached.
-const CACHE = 'health-log-v1';
-const SHELL = ['./', 'index.html', 'styles.css', 'config.js', 'sheets.js', 'app.js',
+const CACHE = 'health-log-v2';
+const SHELL = ['./', 'index.html', 'styles.css', 'config.js', 'sheets.js', 'foodlookup.js', 'app.js',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
