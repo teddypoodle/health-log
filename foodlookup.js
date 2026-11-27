@@ -29,9 +29,9 @@ const FoodLookup = (() => {
     return `
     <div class="lookup">
       <div class="lookup-bar">
-        <input id="lk_q" type="search" placeholder="Look up a food or type a barcode" autocomplete="off" enterkeyhint="search">
+        <input id="lk_q" type="search" placeholder="Look up a food" autocomplete="off" enterkeyhint="search">
         <button type="button" class="secondary small" id="lk_go">Search</button>
-        <button type="button" class="secondary small" id="lk_scan" aria-label="Scan barcode">&#128247; Scan</button>
+        <button type="button" class="secondary small" id="lk_scan" aria-label="Scan barcode" title="Scan barcode">&#128247;</button>
       </div>
       <div id="lk_reader" class="lk-reader" hidden></div>
       <div id="lk_status" class="hint lk-status"></div>
@@ -293,7 +293,7 @@ const FoodLookup = (() => {
 
   async function stopScan() {
     const s = scanner; scanner = null;
-    const btn = el('lk_scan'); if (btn) btn.innerHTML = '&#128247; Scan';
+    const btn = el('lk_scan'); if (btn) btn.innerHTML = '&#128247;';
     const box = el('lk_reader'); if (box) box.hidden = true;
     if (s) { try { await s.stop(); } catch (e) { /* already stopped */ } try { s.clear(); } catch (e) { /* ignore */ } }
   }
